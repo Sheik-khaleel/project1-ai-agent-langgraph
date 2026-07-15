@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv/
+.env.local
+
+# Packaging
+*.egg-info/
+build/
+dist/
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Docker
+*.pid
