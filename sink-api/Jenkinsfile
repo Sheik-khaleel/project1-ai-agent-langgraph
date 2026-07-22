@@ -15,17 +15,18 @@ pipeline {
             }
         }
 
-        stage('SonarQube Scan') {
+    stage('SonarQube Scan') {
     steps {
         withSonarQubeEnv('project1-sonarqube') {
             sh 'echo "Token length: ${#SONAR_AUTH_TOKEN}"'
+            sh 'env | grep -i sonar'
             script {
                 def scannerHome = tool 'SonarScanner'
                 sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=sink-api -Dsonar.sources=sink-api"
                     }
-                 }
+                }
             }
-        }   
+        }
 
         stage('Build Docker Image') {
             steps {
