@@ -1,0 +1,79 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_REGION     = 'ap-south-2'
+        AWS_ACCOUNT_ID = '940722676295'
+        ECR_REPO       = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/project1-ai-agent-langgraph-orchestrator"
+        IMAGE_TAG      = "${GIT_COMMIT.take(7)}-${BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('SonarQube Scan') {
+            steps {
+                withSonarQubeEnv('project1-sonarqube') {
+                    sh 'echo "Token length: ${#SONAR_AUTH_TOKEN}"'
+                    sh 'env | grep -i sonar'
+                    script {
+                        def scannerHome = tool 'SonarScanner'
+                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=orchestrator -Dsonar.sources=orchestrator"
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -f orchestrator/Dockerfile -t ${ECR_REPO}:${IMAGE_TAG} ."
+            }
+        }
+
+        stage('Trivy Scan') {
+            steps {
+                sh "trivy image --severity CRITICAL --exit-code 1 --ignorefile orchestrator/.trivyignore ${ECR_REPO}:${IMAGE_TAG}"
+            }
+        }
+
+        stage('Login to ECR') {
+            steps {
+                sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}"
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                sh "docker push ${ECR_REPO}:${IMAGE_TAG}"
+            }
+        }
+
+        stage('Update Helm Repo') {
+            steps {
+                withCredentials([string(credentialsId: 'project1/github-access', variable: 'GIT_TOKEN')]) {
+                    sh """
+                        rm -rf helm-repo-update
+                        git clone https://Sheik-khaleel:\${GIT_TOKEN}@github.com/Sheik-khaleel/project1-ai-agent-langgraph-helm.git helm-repo-update
+                        cd helm-repo-update
+                        sed -i 's|tag: .*|tag: "${IMAGE_TAG}"|' environments/dev/orchestrator-values.yaml
+                        git config user.email "jenkins-ci@project1.local"
+                        git config user.name "jenkins-ci"
+                        git add environments/dev/orchestrator-values.yaml
+                        git commit -m "ci: update orchestrator image tag to ${IMAGE_TAG}"
+                        git push origin main
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh "docker image prune -f"
+        }
+    }
+}
