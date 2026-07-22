@@ -53,24 +53,24 @@ pipeline {
         }
 
         stage('Update Helm Repo') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'project1/github-access', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
-                    sh """
-                        rm -rf helm-repo-update
-                        git clone https://\${GIT_USER}:\${GIT_TOKEN}@github.com/Sheik-khaleel/project1-ai-agent-langgraph-helm.git helm-repo-update
-                        cd helm-repo-update
-                        sed -i 's|tag: .*|tag: "${IMAGE_TAG}"|' environments/dev/sink-api-values.yaml
-                        git config user.email "jenkins-ci@project1.local"
-                        git config user.name "jenkins-ci"
-                        git add environments/dev/sink-api-values.yaml
-                        git commit -m "ci: update sink-api image tag to ${IMAGE_TAG}"
-                        git push origin main
-                    """
-                }
-            }
+    steps {
+        withCredentials([usernamePassword(credentialsId: 'project1/github-access', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+            sh 'echo "Username is: [${GIT_USER}]"'
+            sh 'echo "Token length: ${#GIT_TOKEN}"'
+            sh """
+                rm -rf helm-repo-update
+                git clone https://\${GIT_USER}:\${GIT_TOKEN}@github.com/Sheik-khaleel/project1-ai-agent-langgraph-helm.git helm-repo-update
+                cd helm-repo-update
+                sed -i 's|tag: .*|tag: "${IMAGE_TAG}"|' environments/dev/sink-api-values.yaml
+                git config user.email "jenkins-ci@project1.local"
+                git config user.name "jenkins-ci"
+                git add environments/dev/sink-api-values.yaml
+                git commit -m "ci: update sink-api image tag to ${IMAGE_TAG}"
+                git push origin main
+            """
         }
     }
-
+}
     post {
         always {
             sh "docker image prune -f"
