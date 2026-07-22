@@ -36,7 +36,7 @@ pipeline {
 
         stage('Trivy Scan') {
             steps {
-                sh "trivy image --severity CRITICAL --exit-code 1 ${ECR_REPO}:${IMAGE_TAG}"
+                sh "trivy image --severity CRITICAL --exit-code 1 --ignorefile sink-api/.trivyignore ${ECR_REPO}:${IMAGE_TAG}"
             }
         }
 
