@@ -1,0 +1,7 @@
+# perl-base CVEs bundled in the python:3.12-slim (Debian) base image
+# No fixed version available upstream yet for any of these — Perl itself
+# is not used by the orchestrator application code, only present as part
+# of the base OS image. Revisit this list periodically to check if patches
+# have become available.
+
+CVE-2026-13221 CVE-2026-42496 CVE-2026-57433 CVE-2026-8376
