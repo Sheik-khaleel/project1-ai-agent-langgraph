@@ -12,7 +12,7 @@ RUN npm ci && npm run build
 FROM node:20-alpine
 WORKDIR /usr/src/app
 COPY --from=build /usr/src/app/dist ./dist
-RUN npm install -g serve
+RUN npm install -g npm@latest && npm install -g serve
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser

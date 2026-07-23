@@ -1,0 +1,4 @@
+# tar CVE bundled via global npm/serve install in runtime stage, not part of
+# application dependencies. Attempted fix via npm self-update; suppressing
+# if no further patch available.
+CVE-2026-59873
